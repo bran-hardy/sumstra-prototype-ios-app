@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "50356c0c-af9b-4e52-ac20-d7860edc0171"
+      }
+    },
+    "owner": "thebranmuffin"
   }
 }
