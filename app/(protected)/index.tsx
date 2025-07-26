@@ -2,9 +2,18 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Image, Platform, StyleSheet } from 'react-native';
+import { supabase } from '@/lib/supabase';
+import { Alert, Button, Image, Platform, StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      Alert.alert(error.message);
+    }
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -48,6 +57,7 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
+        <Button title='Log Out' onPress={handleLogout} />
       </ThemedView>
     </ParallaxScrollView>
   );
