@@ -1,17 +1,22 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { LucideIcon } from "lucide-react-native";
 import { GestureResponderEvent, Pressable, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
 
 type CustomButtonProps = {
     title?: string;
+    size?: number;
     onPress: (event: GestureResponderEvent) => void;
     disabled?: boolean;
     buttonStyle?: ViewStyle;
     textStyle?: TextStyle;
+    lightColor?: string,
+    darkColor?: string,
     Icon?: LucideIcon;
     iconPosition?: 'left' | 'right';
 }
 
-export default function Button({ title, onPress, disabled = false, buttonStyle, textStyle, Icon, iconPosition = 'left'} : CustomButtonProps) {
+export default function Button({ title, size = 24, onPress, disabled = false, buttonStyle, textStyle, lightColor, darkColor, Icon, iconPosition = 'left'} : CustomButtonProps) {
+    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     return (
         <Pressable
             onPress={onPress}
@@ -25,15 +30,15 @@ export default function Button({ title, onPress, disabled = false, buttonStyle, 
         >
             <View style={styles.contentRow}>
                 {Icon && iconPosition === 'left' && (
-                    <Icon size={24} color="white" style={styles.icon} />
+                    <Icon size={size} color={color} style={styles.icon} />
                 )}
                 {title && (
-                    <Text style={[styles.text, textStyle]}>
+                    <Text style={[{ color }, styles.text, textStyle]}>
                         {title}
                     </Text>
                 )}
                 {Icon && iconPosition === 'right' && (
-                    <Icon size={24} color="white" style={styles.icon} />
+                    <Icon size={size} color={color} style={styles.icon} />
                 )}
             </View>
         </Pressable>
