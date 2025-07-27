@@ -36,7 +36,7 @@ export default function ExpenseScreen() {
         }
 
         return true;
-    });
+    }).toReversed();
 
     return (
         <View style={styles.container}>
@@ -56,11 +56,11 @@ export default function ExpenseScreen() {
             </ThemedView>
 
             <Button onPress={() => { }} buttonStyle={styles.addButton} Icon={Plus} />
-            <Button onPress={() => toggleFilter()} buttonStyle={styles.filterButton} Icon={Filter} />
+            <Button onPress={toggleFilter} buttonStyle={styles.filterButton} Icon={Filter} />
             <FilterModal
                 isVisible={isFilterVisible}
-                onSelect={(filter) => setFilter(filter)}
-                onClose={() => toggleFilter()}
+                onSelect={(filter) => {setFilter(filter); setIsFilterVisible(false)}}
+                onClose={() => setIsFilterVisible(false)}
             />
         </View>
     );
@@ -88,20 +88,20 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 100,
         right: 20,
-        backgroundColor: '#000000',
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderRadius: 50,
         elevation: 4,
+        boxShadow: '0 10px 20px -10px #00000088'
     },
     filterButton: {
         position: 'absolute',
         bottom: 100,
         left: 20,
-        backgroundColor: '#000000',
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderRadius: 50,
         elevation: 4,
+        boxShadow: '0 10px 20px -10px #00000088'
     },
 });

@@ -17,12 +17,15 @@ type CustomButtonProps = {
 
 export default function Button({ title, size = 24, onPress, disabled = false, buttonStyle, textStyle, lightColor, darkColor, Icon, iconPosition = 'left'} : CustomButtonProps) {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+
     return (
         <Pressable
             onPress={onPress}
             disabled={disabled}
             style={({ pressed }) => [
                 styles.button,
+                { backgroundColor },
                 disabled && styles.disabled,
                 pressed && !disabled && styles.pressed,
                 buttonStyle,
@@ -47,14 +50,13 @@ export default function Button({ title, size = 24, onPress, disabled = false, bu
 
 const styles = StyleSheet.create({
     button: {
-        backgroundColor: '#1D4ED8', // blue-700
+        //backgroundColor: '#1D4ED8', // blue-700
         paddingVertical: 14,
         paddingHorizontal: 20,
         borderRadius: 5,
-        alignItems: 'center',
+        alignItems: 'center'
     },
     text: {
-        color: '#FFFFFF',
         fontWeight: '600',
         fontSize: 16,
     },

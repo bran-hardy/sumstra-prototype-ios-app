@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, InteractionManager, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import Button from './ui/Button';
 
@@ -14,20 +14,22 @@ const FILTERS = ['ALL', 'NEED', 'WANT', 'SAVING', 'THIS_MONTH'];
 const buttonOffset = -150;
 
 export default function FilterModal({ isVisible, onClose, onSelect, position = { bottom: 165, left: 20 } }: FilterModalProps) {
+    const [rendered, setRendered] = useState(isVisible);
     const animations = useRef(
         FILTERS.map(() => new Animated.Value(buttonOffset))
     ).current;
 
     useEffect(() => {
+        setRendered(true);
         if (isVisible) {
             handleEntry();
-        } else {
+        } else if (rendered) {
             handleExit();
         }
     }, [isVisible]);
 
     function handleEntry() {
-        Animated.stagger(50,
+        Animated.stagger(25,
             animations.map(anim =>
                 Animated.spring(anim, {
                     toValue: 0,
@@ -38,20 +40,26 @@ export default function FilterModal({ isVisible, onClose, onSelect, position = {
     }
 
     function handleExit() {
-        Animated.stagger(50,
+        Animated.stagger(0,
             animations.map(anim =>
-                Animated.spring(anim, {
+                Animated.timing(anim, {
                     toValue: buttonOffset,
+                    duration: 200,
                     useNativeDriver: true,
                 })
             ).reverse()
         ).start(() => {
-            InteractionManager.runAfterInteractions(onClose)
+            InteractionManager.runAfterInteractions(() => {
+                setRendered(false);
+                onClose();
+            })
         });
     }
 
+    if (!rendered) return null;
+
     return (
-        <TouchableWithoutFeedback onPress={handleExit}>
+        <TouchableWithoutFeedback onPress={() => !isVisible && onClose()}>
             <Pressable
                 onPress={(e) => e.stopPropagation()}
                 style={[styles.modal,
@@ -70,9 +78,8 @@ export default function FilterModal({ isVisible, onClose, onSelect, position = {
                             buttonStyle={styles.button}
                             onPress={() => {
                                 onSelect(filter);
-                                handleExit();
                             }}
-                            title={filter}
+                            title={(filter[0] + filter.slice(1).toLowerCase()).replace('_', ' ')}
                         />
                     </Animated.View>
                 ))}
@@ -94,7 +101,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 100,
-        backgroundColor: '#333',
         marginVertical: 4,
+        boxShadow: '0 10px 20px -10px #00000088'
     },
 });
