@@ -1,8 +1,8 @@
+import { useCategoryColor } from "@/hooks/useCategoryColor";
 import { Transaction } from "@/types/Transaction";
 import { Edit3, Trash } from "lucide-react-native";
 import { GestureResponderEvent, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { ThemedView } from "./ThemedView";
 import Button from "./ui/Button";
 
 type CardProps = {
@@ -11,25 +11,16 @@ type CardProps = {
     onDeletePress: (event: GestureResponderEvent) => void;
 }
 
-const lightOrange = '#ff6900';
-const darkOrange = '#813600';
-const lightTeal = '#00bba7';
-const darkTeal = '#006d62';
-const lightGreen = '#00c951';
-const darkGreen = '#005823';
-
 export default function Card({
         transaction,
         onEditPress,
         onDeletePress
     } : CardProps) {
-
-    const categoryLightColor = transaction.category == "NEED" ? lightOrange : transaction.category == "WANT" ? lightTeal : lightGreen;
-    const categoryDarkColor = transaction.category == "NEED" ? darkOrange : transaction.category == "WANT" ? darkTeal : darkGreen;
-
+    
+    const cardBackground = useCategoryColor(transaction.category);
     
     return (
-        <ThemedView style={styles.container} lightColor={categoryLightColor} darkColor={categoryDarkColor}>
+        <View style={[styles.container, { backgroundColor: cardBackground }]}>
             <View style={styles.row}>
                 <View style={styles.content}>
                     <View style={styles.metaContainer}>
@@ -45,7 +36,7 @@ export default function Card({
                 <Button size={18} Icon={Trash} onPress={onDeletePress} buttonStyle={styles.button} />
             </View>
             <ThemedText style={styles.description}>{transaction.description}</ThemedText>
-        </ThemedView>
+        </View>
     )
 }
 
@@ -71,15 +62,6 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         gap: 10,
-    },
-    orange: {
-        backgroundColor: '#ff6900',
-    },
-    teal: {
-        backgroundColor: '#00bba7',
-    },
-    green: {
-        backgroundColor: '#00c951',
     },
     categoryText: {
         fontWeight: 600,

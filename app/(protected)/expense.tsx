@@ -1,44 +1,20 @@
 import Card from '@/components/Card';
-import { ThemedText } from '@/components/ThemedText';
+import FilterModal from '@/components/FilterModal';
 import { ThemedView } from '@/components/ThemedView';
 import Button from '@/components/ui/Button';
 import { useTransactions } from '@/providers/TransactionProvider';
 import { Filter, Plus } from 'lucide-react-native';
 import { useState } from 'react';
-import { FlatList, Modal, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
-const expenses = [
-    {
-        id: '1',
-        title: 'Groceries',
-        amount: 78.5,
-        category: 'need',
-        date: '2025-07-24',
-    },
-    {
-        id: '2',
-        title: 'Netflix Subscription',
-        amount: 15.99,
-        category: 'want',
-        date: '2025-07-22',
-    },
-    {
-        id: '3',
-        title: 'Gas',
-        amount: 42.25,
-        category: 'need',
-        date: '2025-07-20',
-    },
-    // Add more dummy expenses...
-];
-
-type Filters = "ALL" | "WANT" | "NEED" | "SAVING" | "THIS_MONTH";
-
-type CategoryType = "ALL" | "WANT" | "NEED" | "SAVING" | string;
+/*
+ * Instead of having edit and delete icons, hold down on an item with your finger to open up a larger view of the item where you can edit it or delete it
+ *  - would look a lot cleaner and have smooth functionality
+ */
 
 export default function ExpenseScreen() {
     const { transactions } = useTransactions();
-    const [filter, setFilter] = useState<Filters>('ALL');
+    const [filter, setFilter] = useState('ALL');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
 
     const toggleFilter = () => setIsFilterVisible(prev => !prev);
@@ -68,6 +44,7 @@ export default function ExpenseScreen() {
                 <FlatList
                     data={filteredTransactions}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     renderItem={({ item }) => (
                         <Card
                             transaction={item}
@@ -78,19 +55,13 @@ export default function ExpenseScreen() {
                 />
             </ThemedView>
 
-            <Button onPress={toggleFilter} buttonStyle={styles.filterButton} Icon={Filter} />
-
             <Button onPress={() => { }} buttonStyle={styles.addButton} Icon={Plus} />
-
-            <Modal visible={isFilterVisible} transparent animationType="slide">
-                <ThemedView style={styles.modalOverlay}>
-                    <ThemedView style={styles.modalContent}>
-                        <ThemedText style={styles.modalTitle}>Filter Options</ThemedText>
-                        <ThemedText>(Put your filter choices here)</ThemedText>
-                        <Button title='Close' onPress={toggleFilter} buttonStyle={styles.modalClose} />
-                    </ThemedView>
-                </ThemedView>
-            </Modal>
+            <Button onPress={() => toggleFilter()} buttonStyle={styles.filterButton} Icon={Filter} />
+            <FilterModal
+                isVisible={isFilterVisible}
+                onSelect={(filter) => setFilter(filter)}
+                onClose={() => toggleFilter()}
+            />
         </View>
     );
 }
@@ -132,24 +103,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 50,
         elevation: 4,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        padding: 20,
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 10,
-    },
-    modalClose: {
-        marginTop: 20,
-        alignSelf: 'flex-end',
     },
 });
