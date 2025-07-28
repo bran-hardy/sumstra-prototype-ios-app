@@ -1,32 +1,53 @@
-import { StyleSheet, Text, TextInputProps, View } from "react-native";
+import React, { forwardRef } from "react";
+import { StyleSheet, Text, TextInputProps, TextStyle, View, ViewStyle } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 
-type CustomInputProps = {
+interface CustomInputProps extends TextInputProps {
     label?: string;
     error?: string;
-    containerStyle?: object;
-    inputStyle?: object;
-} & TextInputProps;
+    containerStyle?: ViewStyle;
+    inputStyle?: TextStyle;
+    labelStyle?: TextStyle;
+    required?: boolean;
+};
 
+const Input = forwardRef<TextInput, CustomInputProps>(({
+    label,
+    error,
+    containerStyle,
+    inputStyle,
+    labelStyle,
+    required = false,
+    ...textInputProps
+}, ref) => {
+    const hasError = Boolean(error);
 
-export default function Input({ label, error, containerStyle, inputStyle, ...textInputProps } : CustomInputProps) {
     return (
-        <View>
-            {label && <Text style={styles.label}>{label}</Text>}
+        <View style={[styles.container, containerStyle]}>
+            {label && (
+                <Text style={[styles.label, labelStyle]}>
+                    {label}
+                    {required && <Text style={styles.required}> * </Text>}
+                </Text>
+            )}
             <TextInput
+                ref={ref}
                 style={[
                     styles.input,
+                    hasError && styles.inputError,
                     inputStyle,
-                    error && { borderColor: '#DC2626' },
                 ]}
                 placeholderTextColor="#9CA3AF"
                 {...textInputProps}
-            >
-                {error && <Text style={styles.errorText}>{error}</Text>}
-            </TextInput>
+            />
+            {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
     );
-}
+});
+
+Input.displayName = 'Input';
+
+export default Input;
 
 const styles = StyleSheet.create({
     container: {
@@ -39,6 +60,9 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#374151', // gray-700
     },
+    required: {
+        color: '#DC2626',
+    },
     input: {
         paddingVertical: 14,
         paddingHorizontal: 14,
@@ -48,6 +72,10 @@ const styles = StyleSheet.create({
         borderColor: '#D1D5DB', // gray-300
         backgroundColor: '#F9FAFB', // gray-50
         color: '#111827', // gray-900
+    },
+    inputError: {
+        borderColor: '#DC2626',
+        backgroundColor: '#FEF2F2',
     },
     errorText: {
         marginTop: 4,

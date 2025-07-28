@@ -1,13 +1,13 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LucideIcon } from "lucide-react-native";
-import { GestureResponderEvent, Pressable, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
+import { GestureResponderEvent, Pressable, PressableProps, StyleSheet, Text, TextStyle, View } from "react-native";
 
-type CustomButtonProps = {
+interface CustomButtonProps extends PressableProps {
     title?: string;
     size?: number;
     onPress: (event: GestureResponderEvent) => void;
     disabled?: boolean;
-    buttonStyle?: ViewStyle;
+    buttonStyle?: object;
     textStyle?: TextStyle;
     lightColor?: string,
     darkColor?: string,

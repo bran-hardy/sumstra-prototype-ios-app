@@ -1,17 +1,26 @@
+import { AppConfig } from "@/constants/Colors";
 import { useCategoryColor } from "@/hooks/useCategoryColor";
-import { Transaction } from "@/types/Transaction";
+import { formatCurrency, formatDate, Transaction } from "@/types/Transaction";
 import * as Haptics from "expo-haptics";
 import { Edit3, Trash } from "lucide-react-native";
-import { useRef, useState } from "react";
-import { Animated, Easing, GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { AccessibilityInfo, Animated, Easing, GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 import Button from "./ui/Button";
 
-type CardProps = {
+export type CardProps = {
     transaction: Transaction;
-    onEditPress: (event: GestureResponderEvent) => void;
-    onDeletePress: (event: GestureResponderEvent) => void;
+    onEditPress: (transaction: Transaction) => void;
+    onDeletePress: (transaction: Transaction) => void;
 }
+
+const ANIMATION_CONFIG = {
+    SCALE_DURATION: 200,
+    EXPAND_DURATION: 300,
+    LONG_PRESS_DELAY: 300,
+    SHRINK_SCALE: 0.98,
+    EXPANDED_HEIGHT: 100,
+};
 
 export default function Card({
     transaction,
@@ -23,76 +32,108 @@ export default function Card({
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const expandAnim = useRef(new Animated.Value(0)).current;
-
-
     const longPressTimout = useRef<NodeJS.Timeout | null>(null);
 
-    const triggerShrink = () => {
+    const formattedAmount = useMemo(() => formatCurrency(transaction.amount), [transaction.amount]);
+    const formattedDate = useMemo(() => formatDate(transaction.date), [transaction.date]);
+    const categoryDisplay = useMemo(() =>
+        transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1).toLowerCase(), [transaction.category]
+    );
+
+    const triggerShrink = useCallback(() => {
         Animated.timing(scaleAnim, {
-            toValue: 0.98,
-            duration: 200,
+            toValue: ANIMATION_CONFIG.SHRINK_SCALE,
+            duration: ANIMATION_CONFIG.SCALE_DURATION,
             easing: Easing.out(Easing.quad),
             useNativeDriver: true,
         }).start();
-    }
+    }, [scaleAnim]);
 
-    const triggerGrow = () => {
+    const triggerGrow = useCallback(() => {
         Animated.timing(scaleAnim, {
             toValue: 1,
             duration: 100,
             easing: Easing.out(Easing.quad),
             useNativeDriver: true,
         }).start();
-    }
+    }, [scaleAnim]);
 
-    const expandCard = () => {
+    const expandCard = useCallback(() => {
         const toValue = expanded ? 0 : 1;
+
+        // Provide haptic feedback
         Haptics.selectionAsync();
+
+        // Announce state change for accessibility
+        AccessibilityInfo.announceForAccessibility(
+            expanded ? 'Card Collapsed' : 'Card expanded, edit and delete options available'
+        );
 
         Animated.timing(expandAnim, {
             toValue,
-            duration: 300,
+            duration: ANIMATION_CONFIG.EXPAND_DURATION,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
         }).start();
 
         setExpanded(!expanded);
-    };
+    }, [expanded, expandAnim]);
 
-    const collapseCard = () => {
+    const collapseCard = useCallback(() => {
         Animated.timing(expandAnim, {
             toValue: 0,
-            duration: 300,
+            duration: ANIMATION_CONFIG.EXPAND_DURATION,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
-        }).start(() => setExpanded(false));
+        }).start(() => {
+            setExpanded(false)
+        });
+    }, [expandAnim]);
 
-    }
-
-    const handlePressIn = () => {
+    const handlePressIn = useCallback(() => {
         if (!expanded) {
             triggerShrink();
 
             longPressTimout.current = setTimeout(() => {
                 expandCard();
                 triggerGrow();
-            }, 400);
+            }, ANIMATION_CONFIG.LONG_PRESS_DELAY);
         } else {
             collapseCard();
         }
-    };
+    }, [expandAnim, triggerShrink, expandCard, triggerGrow, collapseCard]);
 
-    const handlePressOut = () => {
+    const handlePressOut = useCallback(() => {
         triggerGrow();
         if (!expanded && longPressTimout.current) {
             clearTimeout(longPressTimout.current);
             longPressTimout.current = null;
         }
-    }
+    }, [expanded, triggerGrow]);
+
+    const handleEditPress = useCallback((event: GestureResponderEvent) => {
+        event.stopPropagation();
+        onEditPress(transaction);
+        collapseCard();
+    }, [onEditPress, transaction, collapseCard]);
+
+    const handleDeletePress = useCallback((event: GestureResponderEvent) => {
+        event.stopPropagation();
+        onDeletePress(transaction);
+        collapseCard();
+    }, [onDeletePress, transaction, collapseCard]);
+
+    React.useEffect(() => {
+        return () => {
+            if (longPressTimout.current) {
+                clearTimeout(longPressTimout.current);
+            }
+        }
+    }, []);
 
     const interpolatedHeight = expandAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 100],
+        outputRange: [0, ANIMATION_CONFIG.EXPANDED_HEIGHT],
     });
 
     const interpolatedOpacity = expandAnim.interpolate({
@@ -101,33 +142,54 @@ export default function Card({
     });
 
     return (
-        <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
+        <Pressable 
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={`Transaction: ${transaction.description}, ${formattedAmount}, ${categoryDisplay}, ${formattedDate}`}
+            accessibilityHint="Long press to show edit and delete options"
+        >
             <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
                 <View style={[styles.container, { backgroundColor: bgColor }]}>
                     <View style={styles.row}>
                         <View style={styles.content}>
                             <View style={styles.metaContainer}>
-                                <ThemedText style={styles.categoryText}>{transaction.category[0].toUpperCase() + transaction.category.slice(1).toLowerCase()}</ThemedText>
-                                <ThemedText>{new Date(transaction.date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric'
-                                })}</ThemedText>
+                                <ThemedText style={styles.categoryText}>
+                                    {categoryDisplay}
+                                </ThemedText>
+                                <ThemedText>
+                                    {formattedDate}
+                                </ThemedText>
                             </View>
-                            <ThemedText style={styles.description}>{transaction.description}</ThemedText>
+                            <ThemedText style={styles.description}>
+                                {transaction.description}
+                            </ThemedText>
                         </View>
-                        <ThemedText style={styles.amount}>{'$' + transaction.amount.toFixed(2)}</ThemedText>
+                        <ThemedText style={styles.amount}>
+                            {formattedAmount}
+                        </ThemedText>
                     </View>
                     <Animated.View
                         style={{
                             height: interpolatedHeight,
                             opacity: interpolatedOpacity,
                             overflow: 'hidden',
-                            marginTop: 0,
                         }}>
                         <View style={styles.detailContainer}>
                             <View style={styles.actions}>
-                                <Button Icon={Edit3} onPress={onEditPress} size={18} />
-                                <Button Icon={Trash} onPress={onDeletePress} size={18} />
+                                <Button 
+                                    Icon={Edit3}
+                                    onPress={handleEditPress}
+                                    size={18}
+                                    accessibilityLabel="Edit transaction"
+                                />
+                                <Button
+                                    Icon={Trash}
+                                    onPress={handleDeletePress}
+                                    size={18}
+                                    accessibilityLabel="Delete transaction"
+                                />
                             </View>
                         </View>
                     </Animated.View>
@@ -139,58 +201,55 @@ export default function Card({
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        borderRadius: 15,
+        paddingHorizontal: AppConfig.SPACING.sm,
+        paddingVertical: AppConfig.SPACING.sm,
+        borderRadius: AppConfig.BORDER_RADIUS.large,
         marginHorizontal: 0,
     },
     row: {
-        display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 10,
+        gap: AppConfig.SPACING.sm,
     },
     content: {
-        display: 'flex',
+        flex: 1,
         flexDirection: 'column',
         alignItems: 'stretch',
         justifyContent: 'space-between',
     },
     metaContainer: {
-        display: 'flex',
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
-        gap: 10,
-        marginBottom: 20,
+        gap: AppConfig.SPACING.sm,
+        marginBottom: AppConfig.SPACING.md,
     },
     categoryText: {
         fontWeight: 600,
         fontStyle: 'italic',
+        fontSize: AppConfig.FONT_SIZES.sm,
     },
-    button: {
-        backgroundColor: 'transparent',
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        marginTop: -5,
-        flexGrow: 0,
+    dateText: {
+        fontSize: AppConfig.FONT_SIZES.sm,
+        opacity: 0.7,
     },
     description: {
-        fontSize: 16,
+        fontSize: AppConfig.FONT_SIZES.md,
     },
     amount: {
-        fontSize: 36,
-        lineHeight: 54,
+        fontSize: 32,
+        lineHeight: 48,
         fontWeight: 600,
+        textAlign: 'right',
     },
     detailContainer: {
-        paddingVertical: 10,
+        paddingVertical: AppConfig.SPACING.sm,
     },
     actions: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 12,
-        marginTop: 8,
-    }
+        gap: AppConfig.SPACING.md,
+        marginTop: AppConfig.SPACING.xs,
+    },
 });
