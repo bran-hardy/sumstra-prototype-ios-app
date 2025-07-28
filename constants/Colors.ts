@@ -27,15 +27,15 @@ export const Colors = {
 
 export const CategoryColors = {
     NEED: {
-        light: '#ff690099',
+        light: '#ff690055',
         dark: '#813600',
     },
     WANT: {
-        light: '#00bba799',
+        light: '#00bba755',
         dark: '#006d62',
     },
     SAVING: {
-        light: '#00c95199',
+        light: '#00c95155',
         dark: '#005823',
     },
 }
