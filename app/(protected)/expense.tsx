@@ -1,9 +1,8 @@
-import Card from '@/components/Card';
-import FilterModal from '@/components/FilterModal';
-import { ThemedView } from '@/components/ThemedView';
-import Button from '@/components/ui/Button';
-import { useTransactions } from '@/providers/TransactionProvider';
-import { FilterType, Transaction } from '@/types/Transaction';
+import { ThemedView } from '@/components/layout';
+import { Card, FilterModal } from '@/components/transaction';
+import { Button } from '@/components/ui';
+import { useTransaction } from '@/hooks';
+import { FilterType, Transaction } from '@/types/transaction';
 import { Filter, Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
@@ -14,7 +13,7 @@ import { Alert, FlatList, StyleSheet, View } from 'react-native';
  */
 
 export default function ExpenseScreen() {
-    const { transactions, editTransaction, deleteTransaction } = useTransactions();
+    const { transactions, editTransaction, deleteTransaction } = useTransaction();
     const [filter, setFilter] = useState<FilterType>('ALL');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [animatingTransactions, setAnimatingTransactions] = useState<string[]>([]);

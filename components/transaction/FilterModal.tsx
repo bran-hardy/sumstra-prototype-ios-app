@@ -1,9 +1,9 @@
 
-import { AppConfig } from '@/constants/Colors';
-import { FilterType } from '@/types/Transaction';
+import { AppConfig } from '@/constants';
+import { FilterType } from '@/types/transaction';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
-import Button from './ui/Button';
+import { Button } from '../ui';
 
 type FilterModalProps = {
     isVisible: boolean;
@@ -70,7 +70,7 @@ export default function FilterModal({
 
     useEffect(() => {
         if (isVisible) {
-            setRendered(true)
+            setRendered(true);
 
             setTimeout(handleEntry, 10);
         } else if (rendered) {

@@ -1,12 +1,13 @@
-import { AppConfig } from "@/constants/Colors";
-import { useCategoryColor } from "@/hooks/useCategoryColor";
-import { formatCurrency, formatDate, Transaction } from "@/types/Transaction";
+import { AppConfig } from "@/constants/Config";
+import { useCategoryColor } from "@/hooks/ui/useCategoryColor";
+import { Transaction } from "@/types/transaction";
+import { formatCurrency, formatDate } from "@/utils";
 import * as Haptics from "expo-haptics";
 import { Edit3, Trash } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
-import { ThemedText } from "./ThemedText";
-import Button from "./ui/Button";
+import { ThemedText } from "../layout";
+import { Button } from "../ui";
 
 export type CardProps = {
     transaction: Transaction;

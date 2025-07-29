@@ -1,5 +1,5 @@
-import { AppConfig } from "@/constants/Colors";
-import { Transaction } from "@/types/Transaction";
+import { AppConfig } from "@/constants/Config";
+import { Transaction } from "@/types/transaction";
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import Card from "./Card";

@@ -1,14 +1,11 @@
-import { Transaction } from "@/types/Transaction";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Transaction } from "@/types/transaction";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
+import { useAuth } from "../hooks";
 import {
-    addTransaction as addTransactionService,
-    deleteTransaction as deleteTransactionService,
-    editTransaction as editTransactionService,
-    getAllTransactions,
+    TransactionAPI,
     TransactionError
-} from "../services/TransactionService";
-import { useAuth } from "./AuthProvider";
+} from "../services/api";
 
 interface TransactionContextType {
     transactions: Transaction[];
@@ -21,7 +18,7 @@ interface TransactionContextType {
     clearError: () => void;
 }
 
-const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
+export const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { session } = useAuth();
@@ -40,7 +37,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setError(null);
 
         try {
-            const data = await getAllTransactions(session.user.id);
+            const data = await TransactionAPI.getAll(session.user.id);
             setTransactions(data);
         } catch (err) {
             const errorMessage = err instanceof TransactionError ? err.message : 'Failed to fetch transactions';
@@ -58,7 +55,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setError(null);
 
         try {
-            const newTransaction = await addTransactionService({
+            const newTransaction = await TransactionAPI.create({
                 ...transaction,
                 user_id: session.user.id
             });
@@ -79,7 +76,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setError(null);
 
         try {
-            const updatedTransaction = await editTransactionService(id, updates);
+            const updatedTransaction = await TransactionAPI.update(id, updates);
             setTransactions(prev => 
                 prev.map(txn => txn.id === id ? updatedTransaction : txn)
             );
@@ -96,7 +93,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setError(null);
 
         try {
-            const updatedTransaction = await deleteTransactionService(id);
+            const deleteTransaction = await TransactionAPI.delete(id);
             setTransactions(prev => prev.filter(txn => txn.id != id));
             return true;
         } catch (err) {
@@ -127,13 +124,4 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
             {children}
         </TransactionContext.Provider>
     );
-}
-
-export const useTransactions = () => {
-    const context = useContext(TransactionContext);
-    if (!context) {
-        throw new Error('useTransactions must be used within an TransactionProvider');
-    }
-
-    return context;
 }

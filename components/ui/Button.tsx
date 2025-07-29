@@ -1,4 +1,4 @@
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/hooks";
 import { LucideIcon } from "lucide-react-native";
 import { GestureResponderEvent, Pressable, PressableProps, StyleSheet, Text, TextStyle, View } from "react-native";
 

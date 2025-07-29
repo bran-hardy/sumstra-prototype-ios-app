@@ -23,29 +23,3 @@ export interface TransactionWithMeta extends Transaction {
     isExpense: boolean;
     isThisMonth: boolean;
 }
-
-export const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(amount);
-};
-
-export const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-};
-
-export const isExpenseCategory = (category: ExpenseCategory): boolean => {
-    return category != 'INCOME';
-};
-
-export const isTransactionThisMonth = (dateString: string): boolean => {
-    const txnDate = new Date(dateString);
-    const now = new Date();
-    return txnDate.getMonth() === now.getMonth() &&
-           txnDate.getFullYear() === now.getFullYear();
-};

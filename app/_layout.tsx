@@ -4,9 +4,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { AuthProvider, useAuth } from '@/providers/AuthProvider';
-import { TransactionProvider } from '@/providers/TransactionProvider';
+import { useAuth, useColorScheme } from '@/hooks';
+import { AuthProvider, TransactionProvider } from '@/providers';
 import { ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 

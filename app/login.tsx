@@ -1,9 +1,8 @@
-import Input from "@/components/ui/Input";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/hooks";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Dimensions, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, TouchableWithoutFeedback, View } from "react-native";
-import Button from '../components/ui/Button';
+import { Button, Input } from '../components/ui';
 import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
