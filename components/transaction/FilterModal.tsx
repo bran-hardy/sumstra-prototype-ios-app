@@ -13,7 +13,7 @@ type FilterModalProps = {
     position?: { bottom: number; left: number; };
 }
 
-const FILTERS: FilterType[] = ['ALL', 'NEED', 'WANT', 'SAVING', 'THIS_MONTH'];
+const FILTERS: FilterType[] = ['ALL', 'NEED', 'WANT', 'SAVING']; //, 'THIS_MONTH'];
 const BUTTON_OFFSET = -150;
 
 const formatFilterName = (filter: FilterType): string => {
@@ -105,9 +105,10 @@ export default function FilterModal({
                                         styles.button,
                                         isSelected && styles.selectedButton
                                     ]}
-                                    textStyle={isSelected ? styles.selectedText : undefined}
+                                    textStyle={isSelected ? styles.selectedText : styles.text}
                                     onPress={() => handleFilterSelect(filter)}
                                     title={formatFilterName(filter)}
+                                    blurred={true}
                                 />
                             </Animated.View>
                         );
@@ -146,10 +147,13 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     selectedButton: {
-        opacity: 0.8,
+        opacity: 1,
         transform: [{ scale: 0.95 }],
     },
     selectedText: {
-        fontWeight: '700',
+        fontWeight: '800',
+    },
+    text: {
+        fontWeight: '400',
     }
 });

@@ -1,12 +1,22 @@
 import { supabase } from "@/lib/supabase";
+import { Alert } from "react-native";
 
 export class AuthAPI {
     static async signIn(email: string, password: string) {
-        return await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
+        if (error) Alert.alert(error.message);
+        
+        return data;
     }
 
     static async signUp(email: string, password: string) {
-        return await supabase.auth.signUp({ email, password });
+        const { data: { session }, error } = await supabase.auth.signUp({ email, password });
+
+        if (error) Alert.alert(error.message);
+        if (!session) Alert.alert('Please check your inbox for email verification!');
+
+        return session;
     }
 
     static async signOut() {

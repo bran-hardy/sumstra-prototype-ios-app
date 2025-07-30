@@ -2,6 +2,12 @@ import { useTransaction } from '@/hooks';
 import { StyleSheet, View } from 'react-native';
 
 
+/*
+
+Change Charts -> Profile
+
+*/
+
 export default function ChartPage() {
     const { transactions } = useTransaction();
     return (

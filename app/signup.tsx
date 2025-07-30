@@ -13,6 +13,7 @@ export default function LoginScreen() {
     const router = useRouter();
     const { session } = useAuth();
     
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -22,12 +23,12 @@ export default function LoginScreen() {
             router.replace('/(protected)');
         }
     }, [session]);
-
-    async function signInWithEmail() {
+    
+    async function signUpWithEmail() {
         setLoading(true);
 
-        AuthAPI.signIn(email, password);
-        
+        AuthAPI.signUp(email, password);
+
         setLoading(false);
     }
 
@@ -41,6 +42,15 @@ export default function LoginScreen() {
                         style={styles.logo}
                     />
                     <View style={styles.inputContainer}>
+                        <Input
+                            label="Name"
+                            placeholder="Ben Dover"
+                            value={name}
+                            autoCapitalize="none"
+                            onChangeText={(text) => setName(text)}
+                            inputStyle={styles.input}
+                            labelStyle={styles.label}
+                        />
                         <Input
                             label="Email"
                             placeholder="email@address.com"
@@ -62,16 +72,16 @@ export default function LoginScreen() {
                         />
                     </View>
                     <Button
-                        title="Log In"
+                        title="Sign Up"
                         disabled={loading}
-                        onPress={() => signInWithEmail()}
+                        onPress={() => signUpWithEmail()}
                         buttonStyle={styles.loginButton}
                         textStyle={styles.loginText}
                     />
                     <View style={styles.signup}>
-                        <ThemedText>New user?</ThemedText>
-                        <Link href='/signup'>
-                            <ThemedText style={styles.signupLink}>Sign Up</ThemedText>
+                        <ThemedText>Already have an account?</ThemedText>
+                        <Link href='/login' >
+                            <ThemedText style={styles.signupLink}>Log in</ThemedText>
                         </Link>
                     </View>
                 </View>
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
     },
     signup: {
         flexDirection: 'row',
-        gap: AppConfig.SPACING.sm,
+        gap: AppConfig.SPACING.xs,
     },
     signupLink: {
         fontWeight: 700,

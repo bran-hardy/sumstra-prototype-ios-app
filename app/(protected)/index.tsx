@@ -4,6 +4,20 @@ import ParallaxScrollView from '@/components/other/ParallaxScrollView';
 import { useAuth } from '@/hooks';
 import { Button, Image, Platform, StyleSheet } from 'react-native';
 
+/*
+
+Main Dashboard
+
+Show Want, Need, and Saving percentages
+    - Highlight categories that are lacking funds
+Show extra funds
+
+Graphs
+    - This months progress
+    - past years progress
+
+*/
+
 export default function HomeScreen() {
     const { signOut } = useAuth();
 

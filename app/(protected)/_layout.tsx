@@ -3,7 +3,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/other/HapticTab';
-import TabBarBackground from '@/components/other/TabBarBackground';
+import { TabBarBackground } from '@/components/ui';
 import { Colors } from '@/constants';
 import { useColorScheme } from '@/hooks';
 import { Feather } from '@expo/vector-icons';

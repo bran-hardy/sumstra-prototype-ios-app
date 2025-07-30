@@ -4,7 +4,7 @@
  */
 
 import { Colors } from '@/constants';
-import { useColorScheme } from '@/hooks';
+import { useColorScheme } from '@/hooks/ui/useColorScheme';
 
 export const useThemeColor = (
     props: { 
