@@ -12,6 +12,7 @@ export const AppConfig = {
         medium: 8,
         large: 12,
         xl: 16,
+        xxl: 32,
         full: 50,
     },
 
@@ -63,6 +64,14 @@ export const DateFormats = {
         weekday: 'long'
     },
 } as const;
+
+// Category Names
+export const Category = {
+    INCOME: "INCOME",
+    WANT: "WANT",
+    NEED: "NEED",
+    SAVING: "SAVING",
+}
 
 // Error Messages
 export const ErrorMessages = {

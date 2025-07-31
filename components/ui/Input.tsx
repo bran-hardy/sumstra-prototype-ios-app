@@ -1,6 +1,9 @@
+import { AppConfig } from "@/constants";
+import { useThemeColor } from "@/hooks";
 import React, { forwardRef } from "react";
 import { StyleSheet, Text, TextInputProps, TextStyle, View, ViewStyle } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
+import { ThemedText } from "../layout";
 
 interface CustomInputProps extends TextInputProps {
     label?: string;
@@ -20,66 +23,58 @@ const Input = forwardRef<TextInput, CustomInputProps>(({
     required = false,
     ...textInputProps
 }, ref) => {
+    const inputColor = useThemeColor('text')
+    const inputBackgroundColor = useThemeColor('input');
+    const placeholderTextColor = useThemeColor('placeholder');
+    const errorColor = useThemeColor('error');
     const hasError = Boolean(error);
 
     return (
-        <View style={[styles.container, containerStyle]}>
+        <View style={containerStyle}>
             {label && (
-                <Text style={[styles.label, labelStyle]}>
+                <ThemedText style={[styles.label, labelStyle]}>
                     {label}
                     {required && <Text style={styles.required}> * </Text>}
-                </Text>
+                </ThemedText>
             )}
             <TextInput
                 ref={ref}
                 style={[
+                    { backgroundColor: inputBackgroundColor, color: inputColor },
                     styles.input,
-                    hasError && styles.inputError,
+                    hasError && { outlineWidth: 1, outlineColor: errorColor, },
                     inputStyle,
                 ]}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={placeholderTextColor}
                 {...textInputProps}
             />
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            <Text style={[{ color: errorColor }, styles.errorText]}>{error}</Text>
         </View>
     );
 });
 
-Input.displayName = 'Input';
 
 export default Input;
 
 const styles = StyleSheet.create({
-    container: {
-        marginBottom: 16,
-        width: '100%',
-    },
     label: {
-        marginBottom: 6,
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#374151', // gray-700
+        marginBottom: AppConfig.SPACING.sm,
+        marginLeft: AppConfig.SPACING.md,
+        fontSize: AppConfig.FONT_SIZES.sm,
+        fontWeight: '600',
     },
     required: {
         color: '#DC2626',
     },
     input: {
-        paddingVertical: 14,
-        paddingHorizontal: 14,
+        paddingVertical: AppConfig.SPACING.md,
+        paddingHorizontal:  AppConfig.SPACING.md,
         fontSize: 16,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#D1D5DB', // gray-300
-        backgroundColor: '#F9FAFB', // gray-50
-        color: '#111827', // gray-900
-    },
-    inputError: {
-        borderColor: '#DC2626',
-        backgroundColor: '#FEF2F2',
+        borderRadius: AppConfig.BORDER_RADIUS.full,
     },
     errorText: {
-        marginTop: 4,
-        fontSize: 12,
-        color: '#DC2626', // red-600
+        marginTop: AppConfig.SPACING.xs,
+        marginLeft: AppConfig.SPACING.md,
+        fontSize: AppConfig.FONT_SIZES.sm,
     },
 });

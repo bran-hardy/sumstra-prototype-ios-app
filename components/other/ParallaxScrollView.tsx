@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/layout';
-import { useBottomTabOverflow } from '@/components/other/TabBarBackground';
+import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks';
 
 const HEADER_HEIGHT = 250;

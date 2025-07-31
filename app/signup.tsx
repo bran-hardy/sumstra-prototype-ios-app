@@ -1,5 +1,5 @@
 import { ThemedText } from "@/components";
-import { AppConfig, ValidationRules } from "@/constants";
+import { AppConfig } from "@/constants";
 import { useAuth } from "@/hooks";
 import { AuthAPI } from "@/services/api";
 import { Link, useRouter } from "expo-router";
@@ -13,46 +13,23 @@ export default function LoginScreen() {
     const router = useRouter();
     const { session } = useAuth();
     
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const [emailError, setEmailError] = useState<string | undefined>(undefined);
-    const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         if (session) {
             router.replace('/(protected)');
         }
     }, [session]);
-
-    async function signInWithEmail() {
+    
+    async function signUpWithEmail() {
         setLoading(true);
 
-        validateEmail();
-        validatePassword();
-
-        if (!emailError && !passwordError) {
-            AuthAPI.signIn(email, password);
-        }
+        AuthAPI.signUp(email, password);
 
         setLoading(false);
-    }
-
-    function validateEmail() {
-        if (!ValidationRules.EMAIL.test(email)) {
-            setEmailError('You must enter a proper email address.');
-        } else {
-            setEmailError(undefined);
-        }
-    }
-
-    function validatePassword() {
-        if (ValidationRules.PASSWORD_MIN_LENGTH > password.length) {
-            setPasswordError(`Password must be greater than ${ValidationRules.PASSWORD_MIN_LENGTH} characters`);
-        } else {
-            setPasswordError(undefined);
-        }
     }
 
     return (
@@ -66,37 +43,45 @@ export default function LoginScreen() {
                     />
                     <View style={styles.inputContainer}>
                         <Input
+                            label="Name"
+                            placeholder="Ben Dover"
+                            value={name}
+                            autoCapitalize="none"
+                            onChangeText={(text) => setName(text)}
+                            inputStyle={styles.input}
+                            labelStyle={styles.label}
+                        />
+                        <Input
                             label="Email"
                             placeholder="email@address.com"
                             value={email}
                             autoCapitalize="none"
-                            error={emailError}
                             onChangeText={(text) => setEmail(text)}
                             keyboardType="email-address"
-                            spellCheck={false}
-                            onEndEditing={validateEmail}
+                            inputStyle={styles.input}
+                            labelStyle={styles.label}
                         />
                         <Input
                             label="Password"
                             placeholder="********"
                             value={password}
                             secureTextEntry={true}
-                            error={passwordError}
                             onChangeText={(text) => setPassword(text)}
-                            onEndEditing={validatePassword}
+                            inputStyle={styles.input}
+                            labelStyle={styles.label}
                         />
                     </View>
                     <Button
-                        title="Log In"
+                        title="Sign Up"
                         disabled={loading}
-                        onPress={() => signInWithEmail()}
+                        onPress={() => signUpWithEmail()}
                         buttonStyle={styles.loginButton}
                         textStyle={styles.loginText}
                     />
                     <View style={styles.signup}>
-                        <ThemedText>New user?</ThemedText>
-                        <Link href='/signup'>
-                            <ThemedText style={styles.signupLink}>Sign Up</ThemedText>
+                        <ThemedText>Already have an account?</ThemedText>
+                        <Link href='/login' >
+                            <ThemedText style={styles.signupLink}>Log in</ThemedText>
                         </Link>
                     </View>
                 </View>
@@ -117,10 +102,23 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: "column",
         width: '100%',
-        gap: AppConfig.SPACING.md,
+        gap: AppConfig.SPACING.sm,
     },
     logo: {
         marginBottom: AppConfig.SPACING.xxl,
+    },
+    input: {
+        fontSize: AppConfig.FONT_SIZES.md,
+        borderRadius: AppConfig.BORDER_RADIUS.full,
+        paddingHorizontal: AppConfig.SPACING.md,
+        paddingVertical: AppConfig.SPACING.md,
+        backgroundColor: '#202020',
+        borderWidth: 0,
+    },
+    label: {
+        color: "#FFF",
+        fontSize: AppConfig.FONT_SIZES.md,
+        paddingHorizontal: AppConfig.SPACING.md,
     },
     loginButton: {
         width: '100%',
@@ -133,7 +131,7 @@ const styles = StyleSheet.create({
     },
     signup: {
         flexDirection: 'row',
-        gap: AppConfig.SPACING.sm,
+        gap: AppConfig.SPACING.xs,
     },
     signupLink: {
         fontWeight: 700,

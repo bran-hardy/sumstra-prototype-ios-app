@@ -1,67 +1,107 @@
-import { useThemeColor } from "@/hooks";
+import { AppConfig } from "@/constants";
+import { useHaptic, useThemeColor } from "@/hooks";
+import { BlurView } from "expo-blur";
 import { LucideIcon } from "lucide-react-native";
-import { GestureResponderEvent, Pressable, PressableProps, StyleSheet, Text, TextStyle, View } from "react-native";
+import { StyleSheet, Text, TextStyle, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 
-interface CustomButtonProps extends PressableProps {
+type ButtonProps = {
     title?: string;
     size?: number;
-    onPress: (event: GestureResponderEvent) => void;
+    onPress: () => void;
     disabled?: boolean;
     buttonStyle?: object;
     textStyle?: TextStyle;
-    lightColor?: string,
-    darkColor?: string,
+    lightColor?: string;
+    darkColor?: string;
     Icon?: LucideIcon;
     iconPosition?: 'left' | 'right';
+    hapticFeedback?: boolean;
+    scaleOnPress?: boolean;
+    blurred?: boolean;
 }
 
-export default function Button({ title, size = 24, onPress, disabled = false, buttonStyle, textStyle, lightColor, darkColor, Icon, iconPosition = 'left'} : CustomButtonProps) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+export default function Button({
+        title,
+        size = 24,
+        onPress,
+        disabled = false,
+        buttonStyle,
+        textStyle,
+        lightColor,
+        darkColor,
+        Icon,
+        iconPosition = 'left',
+        hapticFeedback = true,
+        scaleOnPress = true,
+        blurred = false
+    } : ButtonProps) {
+    const { onTap } = useHaptic();
+    const color = useThemeColor('text', { light: lightColor, dark: darkColor }, );
+    const backgroundColor = useThemeColor('background', { light: lightColor, dark: darkColor });
+
+    const tap = Gesture.Tap()
+        .numberOfTaps(1)
+        .onStart(() => {
+            runOnJS(onTap)();
+            runOnJS(onPress)();
+        });
 
     return (
-        <Pressable
-            onPress={onPress}
-            disabled={disabled}
-            style={({ pressed }) => [
-                styles.button,
-                { backgroundColor },
-                disabled && styles.disabled,
-                pressed && !disabled && styles.pressed,
-                buttonStyle,
-            ]}
-        >
-            <View style={styles.contentRow}>
-                {Icon && iconPosition === 'left' && (
-                    <Icon size={size} color={color} style={styles.icon} />
+        <GestureDetector gesture={tap}>
+            <View style={[
+                    styles.button,
+                    !blurred ? { backgroundColor } : null,
+                    buttonStyle,
+                    disabled && styles.disabled
+                ]}>
+                {blurred && (
+                    <BlurView
+                        tint="systemChromeMaterial"
+                        intensity={100}
+                        style={[styles.blurredBg]}
+                    />
                 )}
-                {title && (
-                    <Text style={[{ color }, styles.text, textStyle]}>
-                        {title}
-                    </Text>
-                )}
-                {Icon && iconPosition === 'right' && (
-                    <Icon size={size} color={color} style={styles.icon} />
-                )}
+                <View style={styles.contentRow}>
+                    {Icon && iconPosition === 'left' && (
+                        <Icon size={size} color={color} style={styles.icon} />
+                    )}
+                    {title && (
+                        <Text style={[{ color }, styles.text, textStyle]}>
+                            {title}
+                        </Text>
+                    )}
+                    {Icon && iconPosition === 'right' && (
+                        <Icon size={size} color={color} style={styles.icon} />
+                    )}
+                </View>
             </View>
-        </Pressable>
+        </GestureDetector>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
-        //backgroundColor: '#1D4ED8', // blue-700
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-        alignItems: 'center'
+        position: 'relative',
+        padding: AppConfig.SPACING.md,
+        borderRadius: AppConfig.BORDER_RADIUS.xxl,
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    blurredBg: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     text: {
-        fontWeight: '600',
-        fontSize: 16,
+        fontWeight: '700',
+        fontSize: AppConfig.FONT_SIZES.md,
     },
     disabled: {
-        backgroundColor: '#9CA3AF', // gray-400
+        opacity: 0.5,
     },
     pressed: {
         opacity: 0.75,
@@ -69,7 +109,7 @@ const styles = StyleSheet.create({
     contentRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: AppConfig.SPACING.sm,
     },
     icon: {
         marginHorizontal: 0,

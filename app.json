@@ -4,7 +4,7 @@
     "slug": "sumstra-prototype",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/sumstra-prototype-icon.png",
     "scheme": "sumstraprototype",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.thebranmuffin.sumstraprototype"
     },
     "web": {
       "bundler": "metro",
@@ -28,8 +29,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/sumstra-prototype-logo@3x.png",
+          "imageWidth": 240,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

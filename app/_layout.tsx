@@ -32,13 +32,14 @@ function LayoutWithAuth() {
 	}
 
 	return (
-		<GestureHandlerRootView>
+		<GestureHandlerRootView style={{ flex: 1, }}>
 			<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
 				<Stack>
 					<Stack.Protected guard={session}>
 						<Stack.Screen name="(protected)" options={{ headerShown: false }} />
 					</Stack.Protected>
 					<Stack.Screen name="login" options={{ headerShown: false }} />
+					<Stack.Screen name="signup" options={{ headerShown: false }} />
 					<Stack.Screen name="+not-found" />
 				</Stack>
 				<StatusBar style="auto" />

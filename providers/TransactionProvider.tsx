@@ -1,7 +1,7 @@
 import { Transaction } from "@/types/transaction";
 import { createContext, useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
-import { useAuth } from "../hooks";
+import { useAuth } from "../hooks/data/useAuth";
 import {
     TransactionAPI,
     TransactionError

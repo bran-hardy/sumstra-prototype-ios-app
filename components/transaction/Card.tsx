@@ -1,158 +1,168 @@
 import { AppConfig } from "@/constants/Config";
+import { useHaptic, useThemeColor } from "@/hooks";
 import { useCategoryColor } from "@/hooks/ui/useCategoryColor";
 import { Transaction } from "@/types/transaction";
 import { formatCurrency, formatDate } from "@/utils";
-import * as Haptics from "expo-haptics";
 import { Edit3, Trash } from "lucide-react-native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Easing, GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
+import React, { useCallback } from "react";
+import { Dimensions, StyleSheet, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { ThemedText } from "../layout";
-import { Button } from "../ui";
 
 export type CardProps = {
     transaction: Transaction;
     onEditPress: (transaction: Transaction) => void;
     onDeletePress: (transaction: Transaction) => void;
+    onLongPress?: (Transaction: Transaction) => void;
 }
 
 const ANIMATION_CONFIG = {
     SCALE_DURATION: 200,
     EXPAND_DURATION: 300,
-    LONG_PRESS_DELAY: 300,
     SHRINK_SCALE: 0.98,
     EXPANDED_HEIGHT: 100,
-};
+    ICON_SCALE_UP: 1,
+    ICON_SCALE_NORMAL: 0.8,
+}
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const ACTION_THRESHOLD = 120;
 
 export default function Card({
     transaction,
     onEditPress,
-    onDeletePress
+    onDeletePress,
+    onLongPress
 }: CardProps) {
-    const [expanded, setExpanded] = useState(false);
+    const { triggerActionHaptic, onEdit, onDelete } = useHaptic();
+    const color = useThemeColor({}, 'text');
     const bgColor = useCategoryColor(transaction.category);
+    
+    const triggered = useSharedValue(false);
+    const translateX = useSharedValue(0);
+    const actionOpacity = useSharedValue(0);
 
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-    const expandAnim = useRef(new Animated.Value(0)).current;
-    const longPressTimout = useRef<NodeJS.Timeout | null>(null);
+    const formattedAmount = formatCurrency(transaction.amount);
+    const formattedDate = formatDate(transaction.date);
+    const categoryDisplay = transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1).toLowerCase();
 
-    const formattedAmount = useMemo(() => formatCurrency(transaction.amount), [transaction.amount]);
-    const formattedDate = useMemo(() => formatDate(transaction.date), [transaction.date]);
-    const categoryDisplay = useMemo(() =>
-        transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1).toLowerCase(), [transaction.category]
-    );
-
-    const triggerShrink = useCallback(() => {
-        Animated.timing(scaleAnim, {
-            toValue: ANIMATION_CONFIG.SHRINK_SCALE,
-            duration: ANIMATION_CONFIG.SCALE_DURATION,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-        }).start();
-    }, [scaleAnim]);
-
-    const triggerGrow = useCallback(() => {
-        Animated.timing(scaleAnim, {
-            toValue: 1,
-            duration: 100,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-        }).start();
-    }, [scaleAnim]);
-
-    const expandCard = useCallback(() => {
-        const toValue = expanded ? 0 : 1;
-
-        // Provide haptic feedback
-        Haptics.selectionAsync();
-
-        // Announce state change for accessibility
-        AccessibilityInfo.announceForAccessibility(
-            expanded ? 'Card Collapsed' : 'Card expanded, edit and delete options available'
-        );
-
-        Animated.timing(expandAnim, {
-            toValue,
-            duration: ANIMATION_CONFIG.EXPAND_DURATION,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-        }).start();
-
-        setExpanded(!expanded);
-    }, [expanded, expandAnim]);
-
-    const collapseCard = useCallback(() => {
-        Animated.timing(expandAnim, {
-            toValue: 0,
-            duration: ANIMATION_CONFIG.EXPAND_DURATION,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-        }).start(() => {
-            setExpanded(false)
-        });
-    }, [expandAnim]);
-
-    const handlePressIn = useCallback(() => {
-        if (!expanded) {
-            triggerShrink();
-
-            longPressTimout.current = setTimeout(() => {
-                expandCard();
-                triggerGrow();
-            }, ANIMATION_CONFIG.LONG_PRESS_DELAY);
-        } else {
-            collapseCard();
-        }
-    }, [expandAnim, triggerShrink, expandCard, triggerGrow, collapseCard]);
-
-    const handlePressOut = useCallback(() => {
-        triggerGrow();
-        if (!expanded && longPressTimout.current) {
-            clearTimeout(longPressTimout.current);
-            longPressTimout.current = null;
-        }
-    }, [expanded, triggerGrow]);
-
-    const handleEditPress = useCallback((event: GestureResponderEvent) => {
-        event.stopPropagation();
+    const executeEdit = useCallback(() => {
+        onEdit();
         onEditPress(transaction);
-        collapseCard();
-    }, [onEditPress, transaction, collapseCard]);
+    }, [onEditPress, transaction]);
 
-    const handleDeletePress = useCallback((event: GestureResponderEvent) => {
-        event.stopPropagation();
+    const executeDelete = useCallback(() => {
+        onDelete();
         onDeletePress(transaction);
-        collapseCard();
-    }, [onDeletePress, transaction, collapseCard]);
+    }, [onDeletePress, transaction]);
 
-    React.useEffect(() => {
-        return () => {
-            if (longPressTimout.current) {
-                clearTimeout(longPressTimout.current);
+    const panGesture = Gesture.Pan()
+        .activeOffsetX([-10, 10])
+        .onUpdate((event) => {
+            translateX.value = event.translationX;
+
+            const absTranslateX = Math.abs(event.translationX);
+            actionOpacity.value = interpolate(
+                absTranslateX,
+                [0, ACTION_THRESHOLD],
+                [0, 1],
+                'clamp'
+            );
+
+            if (absTranslateX > ACTION_THRESHOLD && !triggered.value) {
+                runOnJS(triggerActionHaptic)('swipeThreshold');
+                triggered.value = true;
+            } else if (absTranslateX < ACTION_THRESHOLD) {
+                triggered.value = false;
             }
-        }
-    }, []);
+        })
+        .onEnd((event) => {
+            const { translationX } = event;
+            const absTranslateX = Math.abs(translationX);
 
-    const interpolatedHeight = expandAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, ANIMATION_CONFIG.EXPANDED_HEIGHT],
-    });
+            const shouldTriggerAction = absTranslateX > ACTION_THRESHOLD;
 
-    const interpolatedOpacity = expandAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 1],
-    });
+            if (shouldTriggerAction) {
+                if (translationX > 0) {
+                    runOnJS(executeEdit)();
+                } else {
+                    runOnJS(executeDelete)();
+                }
+            }
+
+            translateX.value = withSpring(0, {
+                duration: 300,
+                dampingRatio: 0.8,
+            });
+            actionOpacity.value = withTiming(0, { duration: 200 });
+            triggered.value = false;
+        });
+
+    const cardStyle = useAnimatedStyle(() => ({
+        transform: [
+            { translateX: translateX.value / 4 }
+        ],
+    }));
+
+    const editActionStyle = useAnimatedStyle(() => ({
+        opacity: translateX.value > 0 ? actionOpacity.value : 0,
+        transform: [
+            {
+                translateX: interpolate(
+                    translateX.value,
+                    [0, SCREEN_WIDTH],
+                    [-40, 10],
+                    'clamp'
+                )
+            },
+            {
+                scale: interpolate(
+                    Math.abs(translateX.value),
+                    [0, ACTION_THRESHOLD],
+                    [0.4, 1],
+                    'clamp'
+                )
+            }
+        ]
+    }));
+
+    const deleteActionStyle = useAnimatedStyle(() => ({
+        opacity: translateX.value < 0 ? actionOpacity.value : 0,
+        transform: [
+            {
+                translateX: interpolate(
+                    translateX.value,
+                    [-SCREEN_WIDTH, 0],
+                    [-10, 40],
+                    'clamp'
+                )
+            },
+            {
+                scale: interpolate(
+                    Math.abs(translateX.value),
+                    [0, ACTION_THRESHOLD],
+                    [0.4, 1],
+                    'clamp'
+                )
+            }
+        ]
+    }));
 
     return (
-        <Pressable 
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel={`Transaction: ${transaction.description}, ${formattedAmount}, ${categoryDisplay}, ${formattedDate}`}
-            accessibilityHint="Long press to show edit and delete options"
-        >
-            <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
-                <View style={[styles.container, { backgroundColor: bgColor }]}>
+        <View style={styles.container}>
+            <Animated.View style={styles.background}>
+                <Animated.View style={[styles.leftAction, editActionStyle]}>
+                    <Edit3 size={24} color={color} />
+                </Animated.View>
+
+                <Animated.View style={[styles.rightAction, deleteActionStyle]}>
+                    <Trash size={24} color={color} />
+                </Animated.View>
+            </Animated.View>
+
+            <GestureDetector gesture={panGesture}>
+                <Animated.View style={[styles.card, { backgroundColor: bgColor }, cardStyle]}>
                     <View style={styles.row}>
                         <View style={styles.content}>
                             <View style={styles.metaContainer}>
@@ -171,37 +181,43 @@ export default function Card({
                             {formattedAmount}
                         </ThemedText>
                     </View>
-                    <Animated.View
-                        style={{
-                            height: interpolatedHeight,
-                            opacity: interpolatedOpacity,
-                            overflow: 'hidden',
-                        }}>
-                        <View style={styles.detailContainer}>
-                            <View style={styles.actions}>
-                                <Button 
-                                    Icon={Edit3}
-                                    onPress={handleEditPress}
-                                    size={18}
-                                    accessibilityLabel="Edit transaction"
-                                />
-                                <Button
-                                    Icon={Trash}
-                                    onPress={handleDeletePress}
-                                    size={18}
-                                    accessibilityLabel="Delete transaction"
-                                />
-                            </View>
-                        </View>
-                    </Animated.View>
-                </View>
-            </Animated.View>
-        </Pressable>
+                </Animated.View>
+            </GestureDetector>
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
+        position: 'relative',
+    },
+    background: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        borderRadius: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+    },
+    leftAction: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    rightAction: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '600',
+        marginTop: 4,
+    },
+    card: {
         paddingHorizontal: AppConfig.SPACING.sm,
         paddingVertical: AppConfig.SPACING.sm,
         borderRadius: AppConfig.BORDER_RADIUS.large,
