@@ -6,7 +6,8 @@ import { useTransaction } from '@/hooks';
 import { FilterType, Transaction } from '@/types/transaction';
 import { Filter, Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
+import Animated, { FadingTransition } from 'react-native-reanimated';
 
 /*
 
@@ -36,7 +37,6 @@ export default function ExpenseScreen() {
     const { transactions, editTransaction, deleteTransaction } = useTransaction();
     const [filter, setFilter] = useState<FilterType>('ALL');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
-    const [animatingTransactions, setAnimatingTransactions] = useState<string[]>([]);
 
     const [showEditForm, setShowEditForm] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -129,7 +129,7 @@ export default function ExpenseScreen() {
     return (
         <View style={styles.container}>
             <ThemedView style={styles.content}>
-                <FlatList
+                <Animated.FlatList
                     data={filteredTransactions}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
@@ -143,6 +143,7 @@ export default function ExpenseScreen() {
                             </ThemedView>
                         </View>
                     )}
+                    itemLayoutAnimation={FadingTransition}
                 />
             </ThemedView>
 

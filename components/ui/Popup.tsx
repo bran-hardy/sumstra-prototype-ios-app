@@ -1,11 +1,9 @@
 import { AppConfig } from "@/constants";
+import { BlurView } from "expo-blur";
 import { X } from "lucide-react-native";
 import React, { useEffect } from "react";
 import { Dimensions, KeyboardAvoidingView, Modal, Platform, StyleSheet, TouchableWithoutFeedback, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ThemedText } from "../layout";
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 
 const {
     height: SCREEN_HEIGHT,
@@ -29,10 +27,11 @@ const ANIMATION_CONFIG = {
     duration: AppConfig.ANIMATION_DURATION.slow,
     springConfig: {
         duration: AppConfig.ANIMATION_DURATION.slow,
-        dampingRatio: 0.8,
+        overshootClamping: false,
     },
     timingConfig: {
-        duration: 300,
+        duration: AppConfig.ANIMATION_DURATION.slow,
+        easing: Easing.inOut(Easing.cubic),
     }
 }
 
@@ -48,11 +47,9 @@ export default function Popup({
     backgroundColor = '#FFFFFF',
     backdropOpacity = 0.5,
 }: PopupProps) {
-    const insets = useSafeAreaInsets();
-
     const backdropOpacityValue = useSharedValue(0);
     const translateY = useSharedValue(SCREEN_HEIGHT);
-    const scale = useSharedValue(0.8);
+    const scale = useSharedValue(0.95);
     const opacity = useSharedValue(0);
 
     const showModal = () => {
@@ -60,10 +57,10 @@ export default function Popup({
 
         switch (animationType) {
             case 'slide':
-                translateY.value = withSpring(0, ANIMATION_CONFIG.springConfig);
+                translateY.value = withSpring(0, ANIMATION_CONFIG.timingConfig);
                 break;
             case 'scale':
-                scale.value = withSpring(1, ANIMATION_CONFIG.springConfig);
+                scale.value = withTiming(1, ANIMATION_CONFIG.timingConfig);
                 opacity.value = withTiming(1, ANIMATION_CONFIG.timingConfig);
                 break;
             case 'fade':
@@ -77,14 +74,14 @@ export default function Popup({
 
         switch (animationType) {
             case 'slide':
-                translateY.value = withSpring(SCREEN_HEIGHT, ANIMATION_CONFIG.springConfig, (finished) => {
+                translateY.value = withSpring(SCREEN_HEIGHT, ANIMATION_CONFIG.timingConfig, (finished) => {
                     if (finished) {
                         runOnJS(onClose)();
                     }
                 });
                 break;
             case 'scale':
-                scale.value = withSpring(0.8, ANIMATION_CONFIG.springConfig);
+                scale.value = withTiming(0.95, ANIMATION_CONFIG.timingConfig);
                 opacity.value = withTiming(0, ANIMATION_CONFIG.timingConfig, (finished) => {
                     if (finished) {
                         runOnJS(onClose)();
@@ -103,14 +100,9 @@ export default function Popup({
 
     useEffect(() => {
         if (visible) {
-            const timer = setTimeout(() => {
-                showModal();
-            }, 50);
-
-            return () => clearTimeout(timer);
+            showModal();
         } else {
-            translateY.value = SCREEN_HEIGHT;
-            scale.value = 0.8;
+            scale.value = 0.95;
             opacity.value = 0;
             backdropOpacityValue.value = 0;
         }
@@ -177,40 +169,30 @@ export default function Popup({
                     <Animated.View
                         style={[
                             styles.modal,
-                            {
-                                backgroundColor,
-                                maxHeight: maxHeight + insets.bottom,
-                                paddingBottom: 200,
-                            },
                             getModalStyle(),
                         ]}
                     >
-                        {(title || showCloseButton) && (
-                            <View style={styles.header}>
-                                <View style={styles.titleContainer}>
-                                    <ThemedText style={styles.title}>{title}</ThemedText>
+                        <BlurView intensity={100} tint='systemUltraThinMaterialDark' style={styles.blur}>
+                            {(title || showCloseButton) && (
+                                <View style={styles.header}>
+                                    {showCloseButton && (
+                                        <TouchableWithoutFeedback onPress={handleClose}>
+                                            <View style={styles.closeButton}>
+                                                <X size={24} color="#FFFFFF" />
+                                            </View>
+                                        </TouchableWithoutFeedback>
+                                    )}
                                 </View>
-                                {showCloseButton && (
-                                    <TouchableWithoutFeedback onPress={handleClose}>
-                                        <View style={styles.closeButton}>
-                                            <X size={24} color="#666" />
-                                        </View>
-                                    </TouchableWithoutFeedback>
-                                )}
+                            )}
+
+                            {animationType == 'slide' && (
+                                <View style={styles.dragHandle} />
+                            )}
+
+                            <View style={styles.content}>
+                                {children}
                             </View>
-                        )}
-
-                        {animationType == 'slide' && (
-                            <View style={styles.dragHandle} />
-                        )}
-
-                        <ScrollView
-                            style={styles.content}
-                            showsVerticalScrollIndicator={false}
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            {children}
-                        </ScrollView>
+                        </BlurView>
                     </Animated.View>
                 </KeyboardAvoidingView>
             </View>
@@ -221,7 +203,14 @@ export default function Popup({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        justifyContent: 'flex-end',
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: AppConfig.SPACING.md,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     backdrop: {
         position: 'absolute',
@@ -229,34 +218,28 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: '#000000',
+        backgroundColor: '#00000000',
     },
     keyboardAvoid: {
-        flex: 1,
-        justifyContent: 'flex-end',
+        width: '100%',
+        justifyContent: 'center',
     },
     modal: {
-        flex: 1,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: -3,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        paddingVertical: AppConfig.SPACING.xl,
+        borderRadius: AppConfig.BORDER_RADIUS.xxl,
         elevation: 10,
+    },
+    blur: {
+        borderRadius: AppConfig.BORDER_RADIUS.xxl,
+        overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
         paddingHorizontal: 20,
         paddingTop: 16,
         paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
     },
     titleContainer: {
         flex: 1,
@@ -280,9 +263,6 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     content: {
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingTop: 16,
-        paddingBottom: 20,
+        padding: AppConfig.SPACING.md,
     },
 });

@@ -4,7 +4,7 @@ import { BlurView } from "expo-blur";
 import { LucideIcon } from "lucide-react-native";
 import { StyleSheet, Text, TextStyle, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { runOnJS } from "react-native-reanimated";
 
 type ButtonProps = {
     title?: string;
@@ -38,52 +38,23 @@ export default function Button({
         blurred = false
     } : ButtonProps) {
     const { onTap } = useHaptic();
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+    const color = useThemeColor('text', { light: lightColor, dark: darkColor }, );
+    const backgroundColor = useThemeColor('background', { light: lightColor, dark: darkColor });
 
-    const scale = useSharedValue(1);
-
-    const tapGesture = Gesture.Tap()
+    const tap = Gesture.Tap()
         .numberOfTaps(1)
-        .maxDuration(250)
-        .onBegin(() => {
-            if (disabled) return;
-
-            if (scaleOnPress) {
-                scale.value = withSpring(0.95, {
-                    duration: AppConfig.ANIMATION_DURATION.fast,
-                    dampingRatio: 0.8,
-                });
-            }
-        })
-        .onFinalize((event) => {
-            if (disabled) return;
-
-            if (scaleOnPress) {
-                scale.value = withSpring(1, {
-                    duration: AppConfig.ANIMATION_DURATION.normal,
-                    dampingRatio: 0.8,
-                });
-            }
-
-            if (event.state === 5) {
-                runOnJS(onTap)();
-                runOnJS(onPress)();
-            }
+        .onStart(() => {
+            runOnJS(onTap)();
+            runOnJS(onPress)();
         });
-    
-        const animationStyle = useAnimatedStyle(() => ({
-            transform: [{ scale: scale.value }]
-        }));
 
     return (
-        <GestureDetector gesture={Gesture.Exclusive(tapGesture)}>
-            <Animated.View style={[
+        <GestureDetector gesture={tap}>
+            <View style={[
                     styles.button,
                     !blurred ? { backgroundColor } : null,
                     buttonStyle,
-                    disabled && styles.disabled,
-                    animationStyle
+                    disabled && styles.disabled
                 ]}>
                 {blurred && (
                     <BlurView
@@ -105,7 +76,7 @@ export default function Button({
                         <Icon size={size} color={color} style={styles.icon} />
                     )}
                 </View>
-            </Animated.View>
+            </View>
         </GestureDetector>
     );
 }
@@ -113,9 +84,8 @@ export default function Button({
 const styles = StyleSheet.create({
     button: {
         position: 'relative',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 5,
+        padding: AppConfig.SPACING.md,
+        borderRadius: AppConfig.BORDER_RADIUS.xxl,
         alignItems: 'center',
         overflow: 'hidden',
     },
@@ -127,8 +97,8 @@ const styles = StyleSheet.create({
         bottom: 0,
     },
     text: {
-        fontWeight: '600',
-        fontSize: 16,
+        fontWeight: '700',
+        fontSize: AppConfig.FONT_SIZES.md,
     },
     disabled: {
         opacity: 0.5,
@@ -139,7 +109,7 @@ const styles = StyleSheet.create({
     contentRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: AppConfig.SPACING.sm,
     },
     icon: {
         marginHorizontal: 0,
