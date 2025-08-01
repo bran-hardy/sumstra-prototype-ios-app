@@ -172,7 +172,7 @@ export default function Popup({
                             getModalStyle(),
                         ]}
                     >
-                        <BlurView intensity={100} tint='systemUltraThinMaterialDark' style={styles.blur}>
+                        <BlurView intensity={100} tint='systemUltraThinMaterialLight' style={styles.blur}>
                             {(title || showCloseButton) && (
                                 <View style={styles.header}>
                                     {showCloseButton && (

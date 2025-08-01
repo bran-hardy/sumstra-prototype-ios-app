@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components";
 import { AppConfig, ValidationRules } from "@/constants";
-import { useAuth } from "@/hooks";
+import { useAuth, useThemeColor } from "@/hooks";
 import { AuthAPI } from "@/services/api";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -12,6 +12,8 @@ const logo = require('../assets/images/sumstra-prototype-logo.png');
 export default function LoginScreen() {
     const router = useRouter();
     const { session } = useAuth();
+
+    const buttonText = useThemeColor('textContrast');
     
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -56,42 +58,45 @@ export default function LoginScreen() {
     }
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.container}>
                     <Image
                         source={logo}
                         style={styles.logo}
                     />
-                    <View style={styles.inputContainer}>
-                        <Input
-                            label="Email"
-                            placeholder="email@address.com"
-                            value={email}
-                            autoCapitalize="none"
-                            error={emailError}
-                            onChangeText={(text) => setEmail(text)}
-                            keyboardType="email-address"
-                            spellCheck={false}
-                            onEndEditing={validateEmail}
-                        />
-                        <Input
-                            label="Password"
-                            placeholder="********"
-                            value={password}
-                            secureTextEntry={true}
-                            error={passwordError}
-                            onChangeText={(text) => setPassword(text)}
-                            onEndEditing={validatePassword}
-                        />
-                    </View>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={styles.inputContainer}
+                    >
+                        <View style={{ flex: 1, gap: AppConfig.SPACING.md, }}>
+                            <Input
+                                label="Email"
+                                placeholder="email@address.com"
+                                value={email}
+                                autoCapitalize="none"
+                                error={emailError}
+                                onChangeText={(text) => setEmail(text)}
+                                keyboardType="email-address"
+                                spellCheck={false}
+                                onEndEditing={validateEmail}
+                            />
+                            <Input
+                                label="Password"
+                                placeholder="********"
+                                value={password}
+                                secureTextEntry={true}
+                                error={passwordError}
+                                onChangeText={(text) => setPassword(text)}
+                                onEndEditing={validatePassword}
+                            />
+                        </View>
+                    </KeyboardAvoidingView>
                     <Button
                         title="Log In"
                         disabled={loading}
                         onPress={() => signInWithEmail()}
                         buttonStyle={styles.loginButton}
-                        textStyle={styles.loginText}
+                        textStyle={{ color: buttonText, fontWeight: 700, }}
                     />
                     <View style={styles.signup}>
                         <ThemedText>New user?</ThemedText>
@@ -101,7 +106,6 @@ export default function LoginScreen() {
                     </View>
                 </View>
             </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
     );
 }
 
@@ -117,7 +121,6 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: "column",
         width: '100%',
-        gap: AppConfig.SPACING.md,
     },
     logo: {
         marginBottom: AppConfig.SPACING.xxl,

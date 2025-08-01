@@ -8,7 +8,7 @@ Change Charts -> Profile
 
 */
 
-export default function ChartPage() {
+export default function SettingsPage() {
     const { transactions } = useTransaction();
     return (
         <View>

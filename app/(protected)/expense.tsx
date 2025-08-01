@@ -1,13 +1,10 @@
-import { TransactionFrom } from '@/components';
-import { ThemedView } from '@/components/layout';
-import { Card, FilterModal } from '@/components/transaction';
-import { Button, Popup } from '@/components/ui';
-import { useTransaction } from '@/hooks';
+import { ThemedText, ThemedView, TransactionList } from '@/components/layout';
+import { AppConfig } from '@/constants';
+import { useThemeColor, useTransaction } from '@/hooks';
 import { FilterType, Transaction } from '@/types/transaction';
-import { Filter, Plus } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import Animated, { FadingTransition } from 'react-native-reanimated';
 
 /*
 
@@ -36,14 +33,11 @@ Slides
 export default function ExpenseScreen() {
     const { transactions, editTransaction, deleteTransaction } = useTransaction();
     const [filter, setFilter] = useState<FilterType>('ALL');
-    const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-    const [showEditForm, setShowEditForm] = useState(false);
-    const [showAddForm, setShowAddForm] = useState(false);
+    const primary = useThemeColor('primary');
+    const background = useThemeColor('background');
+    const textContast = useThemeColor('textContrast');
 
-    const toggleFilter = () => {
-        setIsFilterVisible(prev => !prev);
-    };
 
     // Memoize filtered transactions for better performance
     const filteredTransactions = useMemo(() => {
@@ -70,27 +64,6 @@ export default function ExpenseScreen() {
         }).reverse(); // Show newest first
     }, [transactions, filter]);
 
-    const handleFilterSelect = (selectedFilter: FilterType) => {
-        setFilter(selectedFilter)
-        setIsFilterVisible(false);
-    };
-
-    const handleFilterClose = () => {
-        setIsFilterVisible(false);
-    };
-
-    const handleAddPressForm = () => {
-        setShowAddForm(true);
-    }
-    
-    const handleCloseAddForm = () => {
-        setShowAddForm(false);
-    }
-
-    const handleAddTransaction = () => {
-        
-    };
-
     const handleEditTransaction = (transaction: Transaction) => {
         console.log('Edit transaction: ', transaction.id);
     };
@@ -100,7 +73,7 @@ export default function ExpenseScreen() {
             'Delete Transaction',
             `Are you sure you want to delete "${transaction.description}"?`,
             [
-                {text: 'Cancel', style: 'cancel' },
+                { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Delete',
                     style: 'destructive',
@@ -115,44 +88,42 @@ export default function ExpenseScreen() {
         );
     };
 
-    const renderTransaction = ({ item }: { item: Transaction }) => {
-        return (
-            <Card
-                transaction={item}
-                onEditPress={handleEditTransaction}
-                onDeletePress={handleDeleteTransaction}
-                onLongPress={() => console.log("Options...")}
-            />
-        );
-    };
-
     return (
-        <View style={styles.container}>
-            <ThemedView style={styles.content}>
-                <Animated.FlatList
-                    data={filteredTransactions}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={renderTransaction}
-                    maxToRenderPerBatch={10}
-                    contentContainerStyle={styles.listContainer}
-                    ListEmptyComponent={() => (
-                        <View style={styles.emptyContainer}>
-                            <ThemedView style={styles.emptyText}>
-                                No expenses found for the selected filter
-                            </ThemedView>
-                        </View>
-                    )}
-                    itemLayoutAnimation={FadingTransition}
+        <ThemedView style={[styles.container, { backgroundColor: primary, }]}>
+            <View style={styles.headingSection}>
+                <View style={styles.headingCol}>
+                    <ThemedText style={[styles.headingText, { color: textContast }]}>Need</ThemedText>
+                </View>
+                <View style={styles.headingCol}>
+                    <ThemedText style={[styles.headingText, { color: textContast }]}>Want</ThemedText>
+                </View>
+                <View style={styles.headingCol}>
+                    <ThemedText style={[styles.headingText, { color: textContast }]}>Saving</ThemedText>
+                </View>
+            </View>
+            <ThemedView style={styles.expenseList}>
+                <TransactionList 
+                    transactions={filteredTransactions}
+                    onEdit={handleEditTransaction}
+                    onDelete={handleDeleteTransaction}
+                />
+
+                <LinearGradient
+                    colors={[
+                        `${background}00`, // Transparent
+                        `${background}80`, // 50% opacity
+                        `${background}FF`, // Fully opaque
+                    ]}
+                    style={styles.gradientOverlay}
+                    pointerEvents="none"
                 />
             </ThemedView>
+        </ThemedView>
+    );
+}
 
-            <Button
-                onPress={handleAddPressForm}
-                buttonStyle={styles.addButton}
-                Icon={Plus}
-                blurred={true}
-            />
+/*
+ Incase I need this
             <Button
                 onPress={toggleFilter}
                 buttonStyle={styles.filterButton}
@@ -167,66 +138,38 @@ export default function ExpenseScreen() {
                 currentFilter={filter}
             />
 
-            <Popup
-                visible={showAddForm}
-                onClose={handleCloseAddForm}
-                animationType='scale'
-                title='Add Transaction'
-            >
-                <TransactionFrom />
-            </Popup>
-        </View>
-    );
-}
+*/
 
 const styles = StyleSheet.create({
-    headerImage: {
-        color: '#808080',
-        bottom: -90,
-        left: -35,
-        position: 'absolute',
-    },
     container: {
         flex: 1,
+        paddingTop: 80,
     },
-    content: {
-        flex: 1,
-    },
-    listContainer: {
+    headingSection: {
+        flexDirection: 'row',
+        height: 170,
         padding: 20,
-        paddingBottom: 100,
-        paddingTop: 60,
-        gap: 10,
     },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
+    headingCol: {
+        flexGrow: 1,
         alignItems: 'center',
-        paddingTop: 50,
+        justifyContent: 'flex-end',
     },
-    emptyText: {
-        fontSize: 16,
-        opacity: 0.6,
-        textAlign: 'center',
+    headingText: {
+        fontSize: AppConfig.FONT_SIZES.xxl,
+        fontWeight: 700,
     },
-    addButton: {
+    expenseList: {
+        flex: 1,
+        borderRadius: AppConfig.BORDER_RADIUS.xxl,
+        paddingBottom: 50,
+        position: 'relative',
+    },
+    gradientOverlay: {
         position: 'absolute',
-        bottom: 100,
-        right: 20,
-        paddingVertical: 16,
-        paddingHorizontal: 16,
-        borderRadius: 50,
-        elevation: 4,
-        boxShadow: '0 10px 20px -10px rgba(0,0,0,0.3)',
-    },
-    filterButton: {
-        position: 'absolute',
-        bottom: 100,
-        left: 20,
-        paddingVertical: 16,
-        paddingHorizontal: 16,
-        borderRadius: 50,
-        elevation: 4,
-        boxShadow: '0 10px 20px -10px rgba(0,0,0,0.3)',
+        bottom: 50,
+        left: 0,
+        right: 0,
+        height: 200,
     },
 });

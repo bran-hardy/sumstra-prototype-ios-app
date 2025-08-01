@@ -1,6 +1,5 @@
 import { AppConfig } from "@/constants/Config";
 import { useHaptic, useThemeColor } from "@/hooks";
-import { useCategoryColor } from "@/hooks/ui/useCategoryColor";
 import { Transaction } from "@/types/transaction";
 import { formatCurrency, formatDate } from "@/utils";
 import { Edit3, Trash } from "lucide-react-native";
@@ -17,15 +16,6 @@ export type CardProps = {
     onLongPress?: (Transaction: Transaction) => void;
 }
 
-const ANIMATION_CONFIG = {
-    SCALE_DURATION: 200,
-    EXPAND_DURATION: 300,
-    SHRINK_SCALE: 0.98,
-    EXPANDED_HEIGHT: 100,
-    ICON_SCALE_UP: 1,
-    ICON_SCALE_NORMAL: 0.8,
-}
-
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const ACTION_THRESHOLD = 120;
 
@@ -36,8 +26,9 @@ export default function Card({
     onLongPress
 }: CardProps) {
     const { triggerActionHaptic, onEdit, onDelete } = useHaptic();
-    const color = useThemeColor({}, 'text');
-    const bgColor = useCategoryColor(transaction.category);
+    const iconColor = useThemeColor('text');
+    const textColor = useThemeColor('textContrast');
+    const bgColor = useThemeColor('primary');
     
     const triggered = useSharedValue(false);
     const translateX = useSharedValue(0);
@@ -153,11 +144,11 @@ export default function Card({
         <View style={styles.container}>
             <Animated.View style={styles.background}>
                 <Animated.View style={[styles.leftAction, editActionStyle]}>
-                    <Edit3 size={24} color={color} />
+                    <Edit3 size={24} color={iconColor} />
                 </Animated.View>
 
                 <Animated.View style={[styles.rightAction, deleteActionStyle]}>
-                    <Trash size={24} color={color} />
+                    <Trash size={24} color={iconColor} />
                 </Animated.View>
             </Animated.View>
 
@@ -166,18 +157,18 @@ export default function Card({
                     <View style={styles.row}>
                         <View style={styles.content}>
                             <View style={styles.metaContainer}>
-                                <ThemedText style={styles.categoryText}>
+                                <ThemedText style={[styles.categoryText, , { color: textColor }]}>
                                     {categoryDisplay}
                                 </ThemedText>
-                                <ThemedText>
+                                <ThemedText style={{ color: textColor }}>
                                     {formattedDate}
                                 </ThemedText>
                             </View>
-                            <ThemedText style={styles.description}>
+                            <ThemedText style={[styles.description, { color: textColor }]}>
                                 {transaction.description}
                             </ThemedText>
                         </View>
-                        <ThemedText style={styles.amount}>
+                        <ThemedText style={[styles.amount, { color: textColor }]}>
                             {formattedAmount}
                         </ThemedText>
                     </View>
@@ -228,19 +219,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: AppConfig.SPACING.sm,
+        marginVertical: AppConfig.SPACING.sm,
     },
     content: {
         flex: 1,
         flexDirection: 'column',
-        alignItems: 'stretch',
-        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
     },
     metaContainer: {
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'center',
         gap: AppConfig.SPACING.sm,
-        marginBottom: AppConfig.SPACING.md,
+        marginBottom: AppConfig.SPACING.xs,
     },
     categoryText: {
         fontWeight: 600,
@@ -252,12 +244,13 @@ const styles = StyleSheet.create({
         opacity: 0.7,
     },
     description: {
-        fontSize: AppConfig.FONT_SIZES.md,
+        fontSize: AppConfig.FONT_SIZES.xxl,
+        fontWeight: 600,
     },
     amount: {
         fontSize: 32,
         lineHeight: 48,
-        fontWeight: 600,
+        fontWeight: 700,
         textAlign: 'right',
     },
     detailContainer: {

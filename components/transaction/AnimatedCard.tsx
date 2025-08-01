@@ -1,61 +1,53 @@
-import { AppConfig } from "@/constants/Config";
 import { Transaction } from "@/types/transaction";
-import { useEffect, useRef } from "react";
-import { Animated } from "react-native";
+import { Dimensions } from "react-native";
+import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import Card from "./Card";
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-type AnimatedCardProps = {
+interface AnimatedCardProps {
     transaction: Transaction;
+    index: number;
+    scrollY : SharedValue<number>;
+    fadeHeight: number;
     onEditPress: (transaction: Transaction) => void;
     onDeletePress: (transaction: Transaction) => void;
-    isVisible: boolean;
 };
 
-export default function AnimatedCard ({ transaction, onEditPress, onDeletePress, isVisible }: AnimatedCardProps) {
-    const opacity = useRef(new Animated.Value(1)).current;
-    const scale = useRef(new Animated.Value(1)).current;
+export default function AnimatedCard ({ 
+    transaction,
+    index,
+    scrollY,
+    fadeHeight,
+    onEditPress, 
+    onDeletePress
+}: AnimatedCardProps) {
+    const ITEM_HEIGHT = 80;
+    const START_POSITION = 20;
 
-    useEffect(() => {
-        if (isVisible) {
-            Animated.parallel([
-                Animated.timing(opacity, {
-                    toValue: 1,
-                    duration: AppConfig.ANIMATION_DURATION.normal,
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scale, {
-                    toValue: 1,
-                    useNativeDriver: true,
-                    tension: 100,
-                    friction: 8,
-                })
-            ]).start();
-        } else {
-            Animated.parallel([
-                Animated.timing(opacity, {
-                    toValue: 0,
-                    duration: AppConfig.ANIMATION_DURATION.normal,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(scale, {
-                    toValue: 0.8,
-                    duration: AppConfig.ANIMATION_DURATION.normal,
-                    useNativeDriver: true,
-                })
-            ]).start();
-        }
-    }, [isVisible]);
+    const animatedStyle = useAnimatedStyle(() => {
+        const itemTop = START_POSITION + (index * ITEM_HEIGHT);
+        const itemBottom = itemTop + ITEM_HEIGHT;
 
-    if (!isVisible) return null;
+        const scrollTop = scrollY.value;
+        const containerHeight = SCREEN_HEIGHT - 250 - 80;
+        const scrollBottom =scrollY.value + containerHeight;
+
+        const fadeStart = scrollBottom - fadeHeight;
+        const opacity = interpolate(
+            itemBottom,
+            [fadeStart, scrollBottom],
+            [1, 0],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            opacity,
+        };
+    });
 
     return (
-        <Animated.View
-            style={{
-                opacity,
-                transform: [{ scale }]
-            }}
-        >
+        <Animated.View style={animatedStyle}>
             <Card
                 transaction={transaction}
                 onEditPress={() => onEditPress(transaction)}

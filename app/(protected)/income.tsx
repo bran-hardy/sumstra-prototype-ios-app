@@ -1,11 +1,12 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
-import { ThemedText, ThemedView } from '@/components/layout';
-import { Collapsible } from '@/components/other/Collapsible';
-import { ExternalLink } from '@/components/other/ExternalLink';
-import { IconSymbol } from '@/components/other/IconSymbol';
-import ParallaxScrollView from '@/components/other/ParallaxScrollView';
+import { ThemedText, ThemedView, TransactionList } from '@/components/layout';
+import { AppConfig } from '@/constants';
+import { useThemeColor, useTransaction } from '@/hooks';
+import { Transaction } from '@/types/transaction';
+import { formatCurrency } from '@/utils';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useMemo } from 'react';
 
 /*
 
@@ -30,103 +31,117 @@ Slides
 
 */
 
-export default function TabTwoScreen() {
+export default function IncomeScreen() {
+    const { transactions, editTransaction, deleteTransaction } = useTransaction();
+
+    const primary = useThemeColor('primary');
+    const background = useThemeColor('background');
+    const textContast = useThemeColor('textContrast');
+
+    const incomeTransactions = useMemo(() => {
+        return transactions.filter((txn) => {
+            if (txn.category === "INCOME") {
+                return true;
+            }
+        });
+    }, [transactions]);
+
+    const handleEditTransaction = (transaction: Transaction) => {
+        console.log('Edit transaction: ', transaction.id);
+    };
+
+    const handleDeleteTransaction = (transaction: Transaction) => {
+        Alert.alert(
+            'Delete Transaction',
+            `Are you sure you want to delete "${transaction.description}"?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const success = await deleteTransaction(transaction.id);
+                        if (success) {
+                            Alert.alert('Success', 'Transaction deleted successfully');
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const getTotal = (transactions: Transaction[]): number => {
+        let total = 0;
+        transactions.forEach(txn => {
+            total = total + txn.amount;
+        });
+        return total;
+    }
+
     return (
-        <ParallaxScrollView
-            headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-            headerImage={
-                <IconSymbol
-                    size={310}
-                    color="#808080"
-                    name="chevron.left.forwardslash.chevron.right"
-                    style={styles.headerImage}
+        <ThemedView style={[styles.container, { backgroundColor: primary, }]}>
+            <View style={styles.headingSection}>
+                <View style={styles.headingCol}>
+                    <ThemedText style={[styles.totalMeta, { color: textContast }]}>Total</ThemedText>
+                    <ThemedText style={[styles.total, { color: textContast }]}>{formatCurrency(getTotal(incomeTransactions))}</ThemedText>
+                </View>
+            </View>
+            <ThemedView style={styles.expenseList}>
+                <TransactionList
+                    transactions={incomeTransactions}
+                    onEdit={handleEditTransaction}
+                    onDelete={handleDeleteTransaction}
                 />
-            }>
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Explore</ThemedText>
+
+                <LinearGradient
+                    colors={[
+                        `${background}00`, // Transparent
+                        `${background}80`, // 50% opacity
+                        `${background}FF`, // Fully opaque
+                    ]}
+                    style={styles.gradientOverlay}
+                    pointerEvents="none"
+                />
             </ThemedView>
-            <ThemedText>This app includes example code to help you get started.</ThemedText>
-            <Collapsible title="File-based routing">
-                <ThemedText>
-                    This app has two screens:{' '}
-                    <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-                    <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-                </ThemedText>
-                <ThemedText>
-                    The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-                    sets up the tab navigator.
-                </ThemedText>
-                <ExternalLink href="https://docs.expo.dev/router/introduction">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Android, iOS, and web support">
-                <ThemedText>
-                    You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-                    <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-                </ThemedText>
-            </Collapsible>
-            <Collapsible title="Images">
-                <ThemedText>
-                    For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-                    <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-                    different screen densities
-                </ThemedText>
-                <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-                <ExternalLink href="https://reactnative.dev/docs/images">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Custom fonts">
-                <ThemedText>
-                    Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-                    <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-                        custom fonts such as this one.
-                    </ThemedText>
-                </ThemedText>
-                <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Light and dark mode components">
-                <ThemedText>
-                    This template has light and dark mode support. The{' '}
-                    <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-                    what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-                </ThemedText>
-                <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Animations">
-                <ThemedText>
-                    This template includes an example of an animated component. The{' '}
-                    <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-                    the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-                    library to create a waving hand animation.
-                </ThemedText>
-                {Platform.select({
-                    ios: (
-                        <ThemedText>
-                            The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-                            component provides a parallax effect for the header image.
-                        </ThemedText>
-                    ),
-                })}
-            </Collapsible>
-        </ParallaxScrollView>
+        </ThemedView>
     );
 }
 
 const styles = StyleSheet.create({
-    headerImage: {
-        color: '#808080',
-        bottom: -90,
-        left: -35,
-        position: 'absolute',
+    container: {
+        flex: 1,
+        paddingTop: 80,
     },
-    titleContainer: {
+    headingSection: {
         flexDirection: 'row',
-        gap: 8,
+        height: 170,
+        padding: 20,
+    },
+    headingCol: {
+        flexGrow: 1,
+        alignItems: 'flex-start',
+        justifyContent: 'flex-end',
+    },
+    totalMeta: {
+        fontSize: AppConfig.FONT_SIZES.xl,
+        fontWeight: 600,
+    },
+    total: {
+        fontSize: 72,
+        fontWeight: 700,
+        lineHeight: 80,
+    },
+    expenseList: {
+        flex: 1,
+        borderRadius: AppConfig.BORDER_RADIUS.xxl,
+        paddingBottom: 50,
+        position: 'relative',
+    },
+    gradientOverlay: {
+        position: 'absolute',
+        bottom: 50,
+        left: 0,
+        right: 0,
+        height: 200,
     },
 });

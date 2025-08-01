@@ -9,6 +9,7 @@ const tintColorDark = '#fff';
 export const Colors = {
     light: {
         text:               '#202020',
+        textContrast:       '#FFFFFF',
         background:         '#FFFFFF',
         tint:               tintColorLight,
         icon:               '#202020',
@@ -24,6 +25,7 @@ export const Colors = {
     },
     dark: {
         text:               '#FFFFFF',
+        textContrast:       '#202020',
         background:         '#161616',
         tint:               tintColorDark,
         icon:               '#FFFFFF',

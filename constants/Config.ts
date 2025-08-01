@@ -71,7 +71,7 @@ export const Category = {
     WANT: "WANT",
     NEED: "NEED",
     SAVING: "SAVING",
-}
+} as const;
 
 // Error Messages
 export const ErrorMessages = {
